@@ -1,0 +1,66 @@
+import os
+from pathlib import Path
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+import io
+def task1c_data_normalization(input_path):
+  df = pd.read_csv(input_path)
+
+  # Step 3: Standardize column names
+  df.columns = df.columns.str.strip().str.lower()
+
+  print("Original dataset shape:", df.shape)
+  print("Available columns:", df.columns.tolist())
+
+  # Step 4: Identify numeric columns for normalization
+  numeric_columns = ["sales", "unit"]
+
+  # Check whether required columns exist
+  missing_columns = [
+      col for col in numeric_columns if col not in df.columns
+  ]
+
+  if missing_columns:
+      raise ValueError(
+          f"Missing columns: {missing_columns}. "
+          f"Please verify your CSV column names."
+      )
+
+  # Step 5: Convert selected columns to numeric values
+  for col in numeric_columns:
+      df[col] = pd.to_numeric(df[col], errors="coerce")
+
+  # Step 6: Create a copy of the original numeric data
+  normalized_df = df.copy()
+
+  # Step 7: Apply Min-Max normalization
+  scaler = MinMaxScaler(feature_range=(0, 1))
+
+  normalized_columns = ["sales_normalized", "unit_normalized"]
+
+  normalized_df[normalized_columns] = scaler.fit_transform(
+      normalized_df[numeric_columns]
+  )
+
+  # Step 8: Display the original and normalized values
+  print("\nFirst 10 rows of normalized data:")
+  print(
+      normalized_df[
+          ["sales", "sales_normalized", "unit", "unit_normalized"]
+      ].head(10)
+  )
+
+  # Step 9: Verify normalized values
+  print("\nNormalization verification:")
+  print(normalized_df[normalized_columns].agg(["min", "max"]))
+
+  # Step 10: Save the normalized dataset
+  output_file = "./data/output/normalized_numeric.csv"
+  normalized_df.to_csv(output_file, index=False)
+
+  #print("\nNormalized dataset saved successfully:", output_file)
+
+  # Step 11: Download the output CSV file
+  ##files.download(output_file)
+if __name__ == "__main__":
+    task1c_data_normalization("./data/output/cleaned.csv")
